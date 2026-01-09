@@ -433,7 +433,7 @@ export default function BrainTumorInfo() {
           <section className="text-center bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border border-blue-500/20 rounded-2xl p-12">
             <h2 className="text-3xl font-bold mb-4">Need Tumor Detection?</h2>
             <p className="text-slate-400 mb-8 max-w-2xl mx-auto">
-              Our AI-powered system can help detect and classify brain tumors from MRI scans with 98.5% accuracy.
+              Our AI-powered system can help detect and classify brain tumors from MRI scans with 94.5% accuracy.
             </p>
             <button className="px-8 py-4 bg-blue-500 hover:bg-blue-600 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-blue-500/50">
               Try Detection Tool

@@ -69,7 +69,7 @@ export default function About() {
             <h2 className="text-3xl font-bold">Performance & Accuracy</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { label: "Overall Accuracy", value: "98.5%" },
+                { label: "Overall Accuracy", value: "94.5%" },
                 { label: "Sensitivity", value: "97.2%" },
                 { label: "Specificity", value: "99.1%" },
               ].map((stat, idx) => (

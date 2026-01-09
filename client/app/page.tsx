@@ -290,7 +290,7 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-semibold text-sm">High Accuracy</div>
-                      <div className="text-xs text-slate-400">98.5% Precision</div>
+                      <div className="text-xs text-slate-400">94.5% Precision</div>
                     </div>
                   </div>
                 </FloatingCard>
