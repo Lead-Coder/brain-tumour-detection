@@ -9,7 +9,6 @@ import { Navbar } from "@/components/navbar"
 // Three.js Brain Component
 function ThreeBrain() {
   const mountRef = useRef<HTMLDivElement>(null)
-  const [isDark, setIsDark] = useState(true)
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -23,65 +22,132 @@ function ThreeBrain() {
     renderer.setSize(size, size)
     container.appendChild(renderer.domElement)
 
-    // Create brain-like structure
     const brainGroup = new THREE.Group()
     
-    // Main brain sphere
-    const geometry = new THREE.IcosahedronGeometry(1.5, 4)
-    const material = new THREE.MeshPhongMaterial({
-      color: isDark ? 0x3b82f6 : 0x2563eb,
-      wireframe: false,
+    // Create realistic brain hemisphere shape
+    const brainGeometry = new THREE.SphereGeometry(1.8, 64, 64)
+    const positions = brainGeometry.attributes.position
+    
+    // Deform sphere to look like brain with wrinkles
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i)
+      const y = positions.getY(i)
+      const z = positions.getZ(i)
+      
+      // Create brain-like wrinkles using noise
+      const noise = Math.sin(x * 4) * Math.cos(y * 4) * Math.sin(z * 4) * 0.15
+      const noise2 = Math.sin(x * 8) * Math.cos(y * 8) * 0.08
+      
+      positions.setXYZ(
+        i,
+        x * (1 + noise + noise2),
+        y * (1 + noise + noise2),
+        z * (1 + noise + noise2)
+      )
+    }
+    
+    brainGeometry.computeVertexNormals()
+    
+    // Brain material with glowing effect
+    const brainMaterial = new THREE.MeshPhongMaterial({
+      color: 0x3b82f6,
+      emissive: 0x1e3a8a,
+      emissiveIntensity: 0.4,
+      shininess: 30,
       transparent: true,
-      opacity: 0.7,
-      emissive: 0x3b82f6,
-      emissiveIntensity: 0.2
+      opacity: 0.9
     })
-    const brain = new THREE.Mesh(geometry, material)
+    
+    const brain = new THREE.Mesh(brainGeometry, brainMaterial)
     brainGroup.add(brain)
+    
+    // Add wireframe overlay for detail
+    const wireframeGeometry = new THREE.SphereGeometry(1.85, 32, 32)
+    const wireframeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x60a5fa,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.15
+    })
+    const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial)
+    brainGroup.add(wireframe)
 
-    // Neural network particles
+    // Neural connection lines
+    const lineGroup = new THREE.Group()
+    for (let i = 0; i < 40; i++) {
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 3,
+          (Math.random() - 0.5) * 3,
+          (Math.random() - 0.5) * 3
+        ),
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 3,
+          (Math.random() - 0.5) * 3,
+          (Math.random() - 0.5) * 3
+        )
+      ])
+      
+      const lineGeometry = new THREE.TubeGeometry(curve, 20, 0.01, 8, false)
+      const lineMaterial = new THREE.MeshBasicMaterial({
+        color: 0x60a5fa,
+        transparent: true,
+        opacity: 0.3
+      })
+      
+      const line = new THREE.Mesh(lineGeometry, lineMaterial)
+      lineGroup.add(line)
+    }
+    brainGroup.add(lineGroup)
+
+    // Glowing particles around brain
     const particlesGeometry = new THREE.BufferGeometry()
-    const particlesCount = 150
+    const particlesCount = 200
     const posArray = new Float32Array(particlesCount * 3)
     
     for(let i = 0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 5
+      posArray[i] = (Math.random() - 0.5) * 6
     }
     
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3))
     const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.03,
-      color: isDark ? 0x60a5fa : 0x3b82f6,
+      size: 0.05,
+      color: 0x60a5fa,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending
     })
     
     const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial)
     brainGroup.add(particlesMesh)
 
-    // Orbital rings
-    for(let i = 0; i < 3; i++) {
-      const ringGeometry = new THREE.TorusGeometry(2 + i * 0.3, 0.01, 16, 100)
+    // Energy rings
+    for(let i = 0; i < 2; i++) {
+      const ringGeometry = new THREE.TorusGeometry(2.5 + i * 0.4, 0.015, 16, 100)
       const ringMaterial = new THREE.MeshBasicMaterial({
-        color: isDark ? 0x3b82f6 : 0x2563eb,
+        color: i === 0 ? 0x3b82f6 : 0x8b5cf6,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.4
       })
       const ring = new THREE.Mesh(ringGeometry, ringMaterial)
-      ring.rotation.x = Math.PI / 2 + i * 0.3
-      ring.rotation.y = i * 0.5
+      ring.rotation.x = Math.PI / 2 + i * 0.2
+      ring.rotation.y = i * 0.3
       brainGroup.add(ring)
     }
 
     scene.add(brainGroup)
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4)
     scene.add(ambientLight)
     
-    const pointLight = new THREE.PointLight(0x3b82f6, 1)
-    pointLight.position.set(5, 5, 5)
-    scene.add(pointLight)
+    const pointLight1 = new THREE.PointLight(0x3b82f6, 1.5)
+    pointLight1.position.set(3, 3, 3)
+    scene.add(pointLight1)
+    
+    const pointLight2 = new THREE.PointLight(0x8b5cf6, 1)
+    pointLight2.position.set(-3, -3, -2)
+    scene.add(pointLight2)
 
     camera.position.z = 5
 
@@ -89,21 +155,37 @@ function ThreeBrain() {
     let time = 0
     function animate() {
       requestAnimationFrame(animate)
-      time += 0.01
+      time += 0.005
 
-      brainGroup.rotation.y = time * 0.3
-      brainGroup.rotation.x = Math.sin(time * 0.2) * 0.1
+      // Smooth rotation
+      brainGroup.rotation.y = time * 0.4
+      brainGroup.rotation.x = Math.sin(time * 0.3) * 0.1
 
-      // Pulse effect
-      brain.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
+      // Gentle pulsing
+      const scale = 1 + Math.sin(time * 1.5) * 0.03
+      brain.scale.setScalar(scale)
 
-      // Particle animation
+      // Rotate wireframe separately
+      wireframe.rotation.y = time * 0.2
+      wireframe.rotation.z = time * 0.1
+
+      // Animate neural lines
+      lineGroup.rotation.y = -time * 0.15
+      lineGroup.rotation.x = Math.sin(time) * 0.1
+
+      // Particle movement
       const positions = particlesGeometry.attributes.position.array as Float32Array
       for(let i = 0; i < particlesCount; i++) {
         const i3 = i * 3
-        positions[i3 + 1] = Math.sin(time + i) * 0.5
+        positions[i3] += Math.sin(time + i) * 0.001
+        positions[i3 + 1] += Math.cos(time + i * 0.5) * 0.001
+        positions[i3 + 2] += Math.sin(time * 0.5 + i) * 0.001
       }
       particlesGeometry.attributes.position.needsUpdate = true
+
+      // Lights pulsing
+      pointLight1.intensity = 1.5 + Math.sin(time * 2) * 0.3
+      pointLight2.intensity = 1 + Math.cos(time * 1.5) * 0.3
 
       renderer.render(scene, camera)
     }
@@ -111,13 +193,15 @@ function ThreeBrain() {
 
     return () => {
       container.removeChild(renderer.domElement)
-      geometry.dispose()
-      material.dispose()
+      brainGeometry.dispose()
+      brainMaterial.dispose()
+      wireframeGeometry.dispose()
+      wireframeMaterial.dispose()
       particlesGeometry.dispose()
       particlesMaterial.dispose()
       renderer.dispose()
     }
-  }, [isDark])
+  }, [])
 
   return <div ref={mountRef} className="w-full h-full" />
 }
@@ -174,27 +258,6 @@ export default function Home() {
       `}</style>
       <Navbar />
       <main className="min-h-screen bg-slate-950 text-white overflow-hidden">
-        {/* Navbar */}
-        {/* <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-xl">NeuroDetect</span>
-            </div>
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#" className="text-slate-300 hover:text-white transition">Home</a>
-              <a href="#features" className="text-slate-300 hover:text-white transition">Features</a>
-              <a href="#how-it-works" className="text-slate-300 hover:text-white transition">How It Works</a>
-              <a href="#" className="text-slate-300 hover:text-white transition">About</a>
-            </div>
-            <button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition font-medium">
-              Get Started
-            </button>
-          </div>
-        </nav> */}
-
         {/* Hero Section */}
         <section className="relative pt-10 pb-20 px-4 overflow-hidden">
           {/* Animated Background */}
@@ -232,17 +295,17 @@ export default function Home() {
                     Start Detection
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
                   </Link>
-                  <button className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-semibold transition-all">
+                  <Link href="/info" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-semibold transition-all">
                     Learn More
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-6 pt-8">
                   {[
-                    { value: "98.5%", label: "Accuracy Rate" },
+                    { value: "94.5%", label: "Accuracy Rate" },
                     { value: "50K+", label: "Scans Analyzed" },
-                    { value: "2.5s", label: "Avg Time" }
+                    { value: "1.5s", label: "Avg Time" }
                   ].map((stat, idx) => (
                     <div key={idx} className="text-center p-4 bg-slate-900/50 rounded-xl border border-slate-800 backdrop-blur-sm">
                       <div className="text-3xl font-bold text-blue-400">{stat.value}</div>
