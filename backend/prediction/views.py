@@ -8,6 +8,7 @@ from rest_framework import status
 from .utils import preprocess_image
 from .ml.labels import CLASS_NAMES
 from django.core.files.storage import default_storage
+from .models import PredictionModel
 import os
 
 import tensorflow as tf
@@ -55,5 +56,14 @@ def predict_tumour(request):
         "tumour_type": tumour_type,
         "confidence": round(confidence * 100, 2)
     }
+
+    # log the prediction in the database
+    tumour_detected = tumour_type != "notumour"
+    PredictionModel.objects.create(
+        image=file_path,
+        tumour_detected=tumour_detected,
+        tumour_type=tumour_type,
+        confidence=round(confidence * 100, 2),
+    )
 
     return Response(response, status=status.HTTP_200_OK)

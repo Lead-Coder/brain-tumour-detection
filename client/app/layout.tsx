@@ -16,6 +16,11 @@ export const metadata: Metadata = {
     title: "NeuroDetect - Brain Tumor Detection AI",
     description: "Advanced AI-powered brain tumor detection system",
   },
+  icons: {
+    icon: [
+      { url: '/logo.jpg' },
+    ],
+  },
 }
 
 export default function RootLayout({
@@ -25,6 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body className={`font-sans antialiased`}>
         <ThemeProviderWithContext>{children}</ThemeProviderWithContext>
         <Analytics />
